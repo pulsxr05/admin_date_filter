@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Office Ratings and Feedback</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    .filter-section {
+      margin: 20px 0;
+    }
+
+    .filter-section select {
+      padding: 9px;
+      background-color: #fff;
+      color: #333;
+      border: 1px solid #ddd;
+      margin-right: 10px;
+    }
+
+    .back-button button, .reset-button button {
+      padding: 10px 20px;
+      cursor: pointer;
+      background-color: #f44336;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      margin-right: 10px;
+      margin-top: 10px;
+    }
+
+    .back-button button:hover, .reset-button button:hover {
+      background-color: #e53935;
+    }
+
+    .ratings-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    .ratings-table th, .ratings-table td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+
+    .ratings-table th {
+      background-color: #f2f2f2;
+    }
+
+    .average-rating {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+
+    .data-container {
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      margin-top: 20px;
+    }
+
+    .no-data {
+      font-weight: bold;
+      color: #f44336;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Back Button -->
+  <div class="back-button">
+    <button onclick="goBack()">← Back to Office Selection</button>
+  </div>
+
+  <h1 id="officeName">Ratings for Office</h1>
+  
+  <!-- Date Filter Section -->
+  <div class="filter-section">
+    <label for="yearSelect">Choose Year:</label>
+    <select id="yearSelect" onchange="handleYearChange()">
+      <option value="">--Select Year--</option>
+      <script>
+        const currentYear = new Date().getFullYear();
+        for (let year = currentYear; year >= 2000; year--) {
+          document.write(`<option value="${year}">${year}</option>`);
+        }
+      </script>
+    </select>
+    
+    <label for="monthSelect">Choose Month:</label>
+    <select id="monthSelect" onchange="handleMonthChange()" disabled>
+      <option value="">--Select Month--</option>
+      <option value="0">January</option>
+      <option value="1">February</option>
+      <option value="2">March</option>
+      <option value="3">April</option>
+      <option value="4">May</option>
+      <option value="5">June</option>
+      <option value="6">July</option>
+      <option value="7">August</option>
+      <option value="8">September</option>
+      <option value="9">October</option>
+      <option value="10">November</option>
+      <option value="11">December</option>
+    </select>
+
+    <label for="daySelect">Choose Day:</label>
+    <select id="daySelect" onchange="filterRatings()" disabled>
+      <option value="">--Select Day--</option>
+      <script>
+        for (let i = 1; i <= 31; i++) {
+          document.write(`<option value="${i}">${i}</option>`);
+        }
+      </script>
+    </select>
+
+    <!-- Reset Button -->
+    <div class="reset-button">
+      <button onclick="resetFilters()">Reset Filters</button>
+    </div>
+  </div>
+
+  <!-- Data Container for Ratings -->
+  <div class="data-container">
+    <!-- Table to Display Ratings and Feedback -->
+    <table class="ratings-table" id="ratingsTable">
+      <thead>
+        <tr>
+          <th>Rating</th>
+          <th>Comment/Feedback</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Dynamic rows will be added here -->
+      </tbody>
+    </table>
+  </div>
+
+  <div class="average-rating" id="averageRating">Average Rating: --</div>
+
+  <script>
+    // Mock data for office ratings
+    const ratingsData = {
+    "Office 1": [
+      { rating: 5, comment: "Great service!", date: "10/09/2024" },
+      { rating: 4, comment: "Good, but some delays.", date: "09/15/2024" },
+      { rating: 3, comment: "Average experience.", date: "08/20/2024" },
+      { rating: 5, comment: "Excellent!", date: "07/15/2024" },
+      { rating: 4, comment: "Nice staff!", date: "06/12/2023" },
+      { rating: 3, comment: "Satisfactory.", date: "05/25/2023" },
+      { rating: 2, comment: "Could be better.", date: "04/14/2023" },
+      { rating: 5, comment: "Fantastic service!", date: "03/11/2022" },
+      { rating: 4, comment: "Very good.", date: "02/08/2022" },
+      { rating: 3, comment: "Not bad.", date: "01/05/2022" },
+      { rating: 5, comment: "Impressed!", date: "12/25/2021" },
+      { rating: 4, comment: "Very friendly staff.", date: "11/20/2021" },
+      { rating: 2, comment: "Not satisfied.", date: "10/12/2021" },
+      { rating: 5, comment: "Excellent care.", date: "09/14/2021" },
+      { rating: 3, comment: "Average.", date: "08/19/2021" },
+      { rating: 4, comment: "Good, but needs improvement.", date: "07/12/2020" },
+      { rating: 5, comment: "Wonderful experience!", date: "06/08/2020" },
+      { rating: 3, comment: "It was okay.", date: "05/11/2020" },
+      { rating: 2, comment: "Not what I expected.", date: "04/22/2020" },
+      { rating: 4, comment: "Good, could be better.", date: "03/15/2020" },
+      { rating: 5, comment: "Outstanding service!", date: "02/19/2020" },
+      { rating: 3, comment: "Satisfactory overall.", date: "01/23/2020" },
+      { rating: 4, comment: "Nice environment.", date: "12/02/2020" },
+      { rating: 5, comment: "Great experience!", date: "11/28/2020" }
+    ],
+    "Office 2": [
+      { rating: 4, comment: "Nice environment!", date: "10/08/2024" },
+      { rating: 2, comment: "Had some issues.", date: "09/12/2024" },
+      { rating: 3, comment: "It was okay.", date: "08/15/2024" },
+      { rating: 5, comment: "Wonderful service!", date: "07/10/2024" },
+      { rating: 3, comment: "Average experience.", date: "06/20/2023" },
+      { rating: 4, comment: "Good but not great.", date: "05/12/2023" },
+      { rating: 2, comment: "Not satisfied.", date: "04/18/2023" },
+      { rating: 4, comment: "Great staff.", date: "03/10/2023" },
+      { rating: 5, comment: "Amazing service!", date: "02/05/2022" },
+      { rating: 2, comment: "Disappointing.", date: "01/28/2022" },
+      { rating: 3, comment: "Decent experience.", date: "12/15/2021" },
+      { rating: 5, comment: "Loved it!", date: "11/09/2021" },
+      { rating: 4, comment: "Very good.", date: "10/25/2021" },
+      { rating: 3, comment: "Just okay.", date: "09/10/2021" },
+      { rating: 5, comment: "Wonderful.", date: "08/22/2021" },
+      { rating: 4, comment: "Nice and clean.", date: "07/15/2020" },
+      { rating: 3, comment: "Average service.", date: "06/10/2020" },
+      { rating: 2, comment: "Issues encountered.", date: "05/05/2020" },
+      { rating: 5, comment: "Superb!", date: "04/18/2020" },
+      { rating: 4, comment: "Good service.", date: "03/12/2020" },
+      { rating: 2, comment: "Needs improvement.", date: "02/14/2020" },
+      { rating: 3, comment: "Just fine.", date: "01/20/2020" },
+      { rating: 5, comment: "Excellent!", date: "12/29/2020" },
+      { rating: 4, comment: "Very nice.", date: "11/22/2020" }
+    ],
+    "Office 3": [
+      { rating: 5, comment: "Best office I've visited!", date: "10/07/2024" },
+      { rating: 4, comment: "Good overall.", date: "09/10/2024" },
+      { rating: 2, comment: "Not happy.", date: "08/05/2024" },
+      { rating: 3, comment: "Average experience.", date: "07/03/2024" },
+      { rating: 5, comment: "Top notch service!", date: "06/17/2023" },
+      { rating: 4, comment: "Good, could improve.", date: "05/28/2023" },
+      { rating: 2, comment: "Dissatisfied.", date: "04/11/2023" },
+      { rating: 5, comment: "Amazing staff!", date: "03/07/2022" },
+      { rating: 3, comment: "Just okay.", date: "02/14/2022" },
+      { rating: 5, comment: "Excellent service.", date: "01/05/2022" },
+      { rating: 4, comment: "Very good.", date: "12/15/2021" },
+      { rating: 3, comment: "Could be better.", date: "11/10/2021" },
+      { rating: 5, comment: "Best experience.", date: "10/08/2021" },
+      { rating: 4, comment: "Good job!", date: "09/22/2021" },
+      { rating: 2, comment: "Unsatisfied.", date: "08/17/2021" },
+      { rating: 4, comment: "Good but room for improvement.", date: "07/13/2020" },
+      { rating: 5, comment: "Fantastic experience!", date: "06/28/2020" },
+      { rating: 3, comment: "Not bad.", date: "05/14/2020" },
+      { rating: 2, comment: "Expected better.", date: "04/19/2020" },
+      { rating: 5, comment: "Superb service!", date: "03/23/2020" },
+      { rating: 4, comment: "Great office.", date: "02/12/2020" },
+      { rating: 3, comment: "Okay service.", date: "01/15/2020" },
+      { rating: 5, comment: "Loved it!", date: "12/30/2020" },
+      { rating: 4, comment: "Nice experience.", date: "11/18/2020" }
+    ]
+  };
+
+    const officeName = document.getElementById("officeName");
+    const ratingsTable = document.getElementById("ratingsTable").getElementsByTagName("tbody")[0];
+    const averageRatingDiv = document.getElementById("averageRating");
+
+    // Get the selected office from the URL query parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const selectedOffice = urlParams.get("office") || "Office 1";
+
+    // Function to handle year change
+    function handleYearChange() {
+      const year = document.getElementById("yearSelect").value;
+      const monthSelect = document.getElementById("monthSelect");
+      const daySelect = document.getElementById("daySelect");
+
+      monthSelect.disabled = !year;
+      daySelect.disabled = true;
+      daySelect.value = "";
+      filterRatings();
+    }
+
+    // Function to handle month change
+    function handleMonthChange() {
+      const year = document.getElementById("yearSelect").value;
+      const monthSelect = document.getElementById("monthSelect");
+      const daySelect = document.getElementById("daySelect");
+
+      daySelect.disabled = !(year && monthSelect.value);
+      filterRatings();
+    }
+
+    // Filter and display ratings based on filters
+    function filterRatings() {
+      const year = document.getElementById("yearSelect").value;
+      const month = document.getElementById("monthSelect").value;
+      const day = document.getElementById("daySelect").value;
+
+      ratingsTable.innerHTML = "";
+
+      const filteredRatings = ratingsData[selectedOffice].filter(rating => {
+        const ratingDate = new Date(rating.date);
+        return (
+          (!year || ratingDate.getFullYear().toString() === year) &&
+          (!month || ratingDate.getMonth().toString() === month) &&
+          (!day || ratingDate.getDate().toString() === day)
+        );
+      });
+
+      if (filteredRatings.length > 0) {
+        filteredRatings.forEach(rating => {
+          const row = ratingsTable.insertRow();
+          row.insertCell(0).innerText = rating.rating;
+          row.insertCell(1).innerText = rating.comment;
+          row.insertCell(2).innerText = rating.date;
+        });
+
+        const average = filteredRatings.reduce((sum, rating) => sum + rating.rating, 0) / filteredRatings.length;
+        averageRatingDiv.innerText = `Average Rating: ${average.toFixed(2)} (${getRatingLabel(average)})`;
+      } else {
+        averageRatingDiv.innerText = "No Data Found";
+      }
+    }
+
+    // Reset filters
+    function resetFilters() {
+      document.getElementById("yearSelect").value = "";
+      document.getElementById("monthSelect").value = "";
+      document.getElementById("monthSelect").disabled = true;
+      document.getElementById("daySelect").value = "";
+      document.getElementById("daySelect").disabled = true;
+      filterRatings();
+    }
+
+    // Go back to the office selection
+    function goBack() {
+      window.location.href = "index.html";
+    }
+
+    // Get rating label based on the average rating
+    function getRatingLabel(averageRating) {
+      if (averageRating >= 4.5) return "Excellent";
+      if (averageRating >= 3.5) return "Good";
+      if (averageRating >= 2.5) return "Average";
+      if (averageRating >= 1.5) return "Below Average";
+      return "Poor";
+    }
+
+    // Initialize with data for selected office
+    function initialize() {
+      officeName.innerText = `Ratings for ${selectedOffice}`;
+      filterRatings();
+    }
+
+    // Call initialize function when page loads
+    window.onload = initialize;
+  </script>
+</body>
+</html>
